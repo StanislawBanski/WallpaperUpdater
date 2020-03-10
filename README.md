@@ -11,7 +11,7 @@ Small windows service used to update wallpaper in the register
 - Install service using installutil.exe with CMD in administrator mode  
   Example call: c:\windows\microsoft.net\framework\v4.0.30319\installutil.exe /ImageFilePath="<full path to image>" WallPaperUpdater.exe  
   For /ImageFilePath provide path to your image
-- Instller will ask for credentials for a service user
+- Installer will ask for credentials for a service user
 - Open Windows services and start the service (only needed for 1st time)
   
 # Logs
