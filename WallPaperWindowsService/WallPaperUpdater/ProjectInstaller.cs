@@ -14,7 +14,7 @@ namespace WallPaperUpdater
 
         protected override void OnBeforeInstall(IDictionary savedState)
         {
-            Context.Parameters["assemblypath"] += " " + "\"" + Context.Parameters["ImageFilePath"] + "\"";
+            Context.Parameters["assemblypath"] += " " + "\"" + Context.Parameters["WallpaperImageFilePath"] + "\" " + "\"" + Context.Parameters["LockScreenImageFilePath"] + "\" ";
             base.OnBeforeInstall(savedState);
         }
     }

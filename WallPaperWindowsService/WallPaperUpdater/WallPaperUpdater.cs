@@ -11,16 +11,24 @@ namespace WallPaperUpdater
         private EventLog eventLog;
         private int eventId = 1;
         private Timer timer;
-        private string imageFilePath;
+
+        private string wallpaperImageFilePath;
+        private string lockScreenImageFilePath;
+
         private const string userRoot = "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System";
         private const string wallPaperKey = "Wallpaper";
 
-        public WallPaperUpdater(string filePath)
+        private const string machineRoot = "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\Personalization";
+        private const string lockScreenKey = "LockScreenImage";
+
+        public WallPaperUpdater(string wpFilePath, string lsFilePath)
         {
             InitializeComponent();
             setupEventLog();
-            eventLog.WriteEntry($"Received image file path: {filePath}", EventLogEntryType.Information, eventId++);
-            imageFilePath = filePath;
+            eventLog.WriteEntry($"Received wallpaper image file path: {wpFilePath}", EventLogEntryType.Information, eventId++);
+            eventLog.WriteEntry($"Received lockscreen image file path: {lsFilePath}", EventLogEntryType.Information, eventId++);
+            wallpaperImageFilePath = wpFilePath;
+            lockScreenImageFilePath = lsFilePath;
         }
 
         private void setupEventLog()
@@ -36,23 +44,27 @@ namespace WallPaperUpdater
 
         protected override void OnStart(string[] args)
         {
-            eventLog.WriteEntry("Starting...");
+            eventLog.WriteEntry("Starting...", EventLogEntryType.Information, eventId++);
 
-            if (string.IsNullOrEmpty(imageFilePath) || !File.Exists(imageFilePath))
+            if (string.IsNullOrEmpty(wallpaperImageFilePath) || !File.Exists(wallpaperImageFilePath))
             {
-                eventLog.WriteEntry($"Invalid file path {imageFilePath}", EventLogEntryType.Error, eventId++);
+                eventLog.WriteEntry($"Invalid wallpaper file path {wallpaperImageFilePath}", EventLogEntryType.Error, eventId++);
             } 
+            else if (string.IsNullOrEmpty(lockScreenImageFilePath) || !File.Exists(lockScreenImageFilePath))
+            {
+                eventLog.WriteEntry($"Invalid lock screen file path {wallpaperImageFilePath}", EventLogEntryType.Error, eventId++);
+            }
             else
             {
-                eventLog.WriteEntry("Setup timer", EventLogEntryType.Information, eventId++);
+                eventLog.WriteEntry("Setup timer...", EventLogEntryType.Information, eventId++);
                 SetupTimer();
-                UpdateValue();
+                UpdateValues();
             }
         }
 
         protected override void OnStop()
         {
-            eventLog.WriteEntry("Stopping...");
+            eventLog.WriteEntry("Stopping...", EventLogEntryType.Information, eventId++);
         }
 
         private void SetupTimer()
@@ -65,18 +77,25 @@ namespace WallPaperUpdater
 
         public void OnTimer(object sender, ElapsedEventArgs args)
         {
-            UpdateValue();
+            UpdateValues();
         }
 
-        private void UpdateValue()
+        private void UpdateValues()
         {
             try
             {
                 var currentRegValue = Registry.GetValue(userRoot, wallPaperKey, string.Empty).ToString();
 
-                if (currentRegValue != imageFilePath)
+                if (currentRegValue != wallpaperImageFilePath)
                 {
-                    Registry.SetValue(userRoot, wallPaperKey, imageFilePath);
+                    Registry.SetValue(userRoot, wallPaperKey, wallpaperImageFilePath);
+                }
+
+                currentRegValue = Registry.GetValue(machineRoot, lockScreenKey, string.Empty).ToString();
+
+                if (currentRegValue != lockScreenImageFilePath)
+                {
+                    Registry.SetValue(machineRoot, lockScreenKey, lockScreenImageFilePath);
                 }
             }
             catch (System.Exception e)
